@@ -1,7 +1,7 @@
 # Omarchy sobre CachyOS
 
 Adaptador comunitario **experimental** para instalar el escritorio de Omarchy
-**4.0.4 (Quattro)** en CachyOS x86_64. Conserva la distribución, el kernel, los
+**4.0.6 (Quattro)** en CachyOS x86_64. Conserva la distribución, el kernel, los
 controladores, el cargador de arranque y la política de Snapper de CachyOS.
 Instala los programas del escritorio y sus configuraciones de usuario.
 
@@ -13,8 +13,8 @@ del sistema y la instalación desde su ISO. Por eso `cd "$HOME/omarchy"` no arre
 El instalador anterior también mezclaba rutas relativas y podía continuar
 después de errores de descarga o de modificación de archivos.
 
-Este fork verifica el tag `v4.0.4` contra el commit
-`c668141e9c42b13c80c9ca4ea108e11708c5e8a5`, construye el paquete local
+Este fork verifica el tag `v4.0.6` contra el commit
+`237f1b4071a0bff2296c6d740ba2b9fd695ebfa0`, construye el paquete local
 `omarchy-cachyos` y ejecuta la preparación de usuario de Quattro. No ejecuta
 `install.sh`, ni instala los paquetes oficiales `omarchy` / `omarchy-settings`:
 en x86_64 esos paquetes añaden dependencias de Limine y ajustes de arranque.
@@ -44,7 +44,7 @@ cambiar `bin/release.sh` y el `PKGBUILD`. No se ofrece una opción `main/dev`.
   snapshot. Guarda aparte tus datos: un snapshot de raíz puede excluir `/home`.
 
 **Límite de validación:** hay pruebas de Bash, descarga, rutas y contenido del
-paquete con las fuentes reales de 4.0.4. No constituyen una instalación completa
+paquete con las fuentes reales de 4.0.6. No constituyen una instalación completa
 en CachyOS ni una prueba de inicio gráfico, GPU, audio o Wi-Fi. Prueba primero en
 una instalación prescindible o una VM con snapshot.
 
@@ -81,7 +81,7 @@ una instalación prescindible o una VM con snapshot.
    bash bin/install-omarchy-on-cachyos.sh --prepare-only
    ```
 
-   Las fuentes se guardan en `~/.cache/omarchy-on-cachyos/source-4.0.4`.
+   Las fuentes se guardan en `~/.cache/omarchy-on-cachyos/source-4.0.6`.
    El comando se puede ejecutar desde cualquier directorio utilizando la ruta
    absoluta del script. No necesitas hacer `cd` a Omarchy ni usar `chmod`.
 
@@ -169,7 +169,7 @@ En Linux con Bash, Git, AWK y Python 3:
 
 ```bash
 bash bin/install-omarchy-on-cachyos.sh --prepare-only
-OMARCHY_TEST_SOURCE="$HOME/.cache/omarchy-on-cachyos/source-4.0.4" python3 tests/test_adapter.py
+OMARCHY_TEST_SOURCE="$HOME/.cache/omarchy-on-cachyos/source-4.0.6" python3 tests/test_adapter.py
 ```
 
 La prueba de empaquetado ejecuta `package()` sobre las fuentes reales en una

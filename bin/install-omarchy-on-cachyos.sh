@@ -77,6 +77,10 @@ sudo pacman -Syu --needed base-devel git imagemagick omarchy-keyring
 mkdir -p "$HOME/.cache/omarchy-on-cachyos"
 build_dir=$(mktemp -d "$HOME/.cache/omarchy-on-cachyos/build.XXXXXX")
 cp "$PROJECT_DIR/pkgbuilds/omarchy-cachyos/PKGBUILD" "$build_dir/"
+# Optional local patches listed in the PKGBUILD source array.
+for patch in "$PROJECT_DIR"/pkgbuilds/omarchy-cachyos/*.patch; do
+  [[ ! -f $patch ]] || cp "$patch" "$build_dir/"
+done
 (cd "$build_dir" && makepkg --syncdeps --noconfirm)
 package_list=$(cd "$build_dir" && makepkg --packagelist)
 mapfile -t local_packages <<< "$package_list"
