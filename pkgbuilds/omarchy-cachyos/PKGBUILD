@@ -1,9 +1,9 @@
 # Community desktop adapter for CachyOS. Based on the MIT-licensed Omarchy
 # runtime/settings recipes; deliberately excludes their system and boot stack.
 pkgname=omarchy-cachyos
-pkgver=4.0.4
-pkgrel=2
-_commit=c668141e9c42b13c80c9ca4ea108e11708c5e8a5
+pkgver=4.0.6
+pkgrel=1
+_commit=237f1b4071a0bff2296c6d740ba2b9fd695ebfa0
 pkgdesc='Omarchy desktop defaults and runtime adapted for CachyOS (experimental)'
 arch=(x86_64)
 url='https://github.com/MiguelU-coder/omarchy-on-cachyos'
@@ -16,7 +16,7 @@ depends=(omarchy-keyring 'hyprland>=0.55' quickshell uwsm sddm xdg-desktop-porta
 makedepends=(git imagemagick)
 options=(!debug)
 source=("omarchy::git+https://github.com/omacom/omarchy.git#commit=$_commit")
-sha256sums=('8371b148aa06e9d0627c9e11668ef2dfdf54c4a9e5ffbee5aee08c3945073618')
+sha256sums=('f89ae5e85d18d8364f5c89ae05cd0fd170a8c4c93dd62e396b2b0a7fa5be4428')
 
 package() {
   cd "$srcdir/omarchy"
