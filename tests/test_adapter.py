@@ -85,7 +85,7 @@ class AdapterTests(unittest.TestCase):
 
     def test_recipe_version_and_commit_match_downloader(self):
         result = run('bash', '-c', 'source "$1"; source "$2"; '
-                     '[[ $OMARCHY_VERSION == "$pkgver" && $OMARCHY_COMMIT == "$_commit" ]]',
+                     '[[ ${OMARCHY_VERSION//-/} == "$pkgver" && $OMARCHY_COMMIT == "$_commit" ]]',
                      'bash', str(ROOT / 'bin/release.sh'), str(ROOT / 'pkgbuilds/omarchy-cachyos/PKGBUILD'))
         self.assertEqual(result.returncode, 0, result.stderr)
 

@@ -1,0 +1,101 @@
+name: Track upstream Omarchy
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Omarchy version to pin, e.g. 4.0.7 (default: latest stable tag)'
+        required: false
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: track-upstream
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    container: cachyos/cachyos:latest
+    steps:
+      - name: Install build tools
+        run: pacman -Syu --noconfirm --needed base-devel git github-cli imagemagick python sudo
+      - uses: actions/checkout@v7
+      - name: Pin the new release
+        id: bump
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          old=$(source bin/release.sh && echo "$OMARCHY_VERSION")
+          bash bin/bump-omarchy.sh "$VERSION"
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          new=$(source bin/release.sh && echo "$OMARCHY_VERSION")
+          branch=upstream/omarchy-v$new
+          # A branch left from an earlier run means the update is already proposed (or was declined).
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "Branch $branch already exists; nothing to do."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          { echo "changed=true"; echo "old=$old"; echo "new=$new"; echo "branch=$branch"; } >> "$GITHUB_OUTPUT"
+      - name: Build the package
+        id: build
+        if: steps.bump.outputs.changed == 'true'
+        continue-on-error: true
+        run: |
+          useradd -m builder
+          build_dir=$(mktemp -d)
+          cp pkgbuilds/omarchy-cachyos/PKGBUILD "$build_dir/"
+          for patch in pkgbuilds/omarchy-cachyos/*.patch; do
+            [[ ! -f $patch ]] || cp "$patch" "$build_dir/"
+          done
+          chown -R builder "$build_dir"
+          # Runtime dependencies come from [omarchy]; only the build itself is checked here.
+          sudo -u builder bash -c "cd '$build_dir' && makepkg --nodeps --noconfirm"
+          for package in "$build_dir"/*.pkg.tar.zst; do
+            echo "Built ${package##*/}: $(bsdtar -tf "$package" | wc -l) entries"
+          done
+      - name: Run the adapter tests
+        id: test
+        if: steps.bump.outputs.changed == 'true'
+        continue-on-error: true
+        env:
+          OMARCHY_SOURCE_DIR: ${{ runner.temp }}/omarchy-source
+          OMARCHY_TEST_SOURCE: ${{ runner.temp }}/omarchy-source
+        run: |
+          bash bin/install-omarchy-on-cachyos.sh --prepare-only
+          python3 tests/test_adapter.py
+      - name: Open a pull request
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OLD: ${{ steps.bump.outputs.old }}
+          NEW: ${{ steps.bump.outputs.new }}
+          BRANCH: ${{ steps.bump.outputs.branch }}
+          BUILD: ${{ steps.build.outcome }}
+          TEST: ${{ steps.test.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          body=$(mktemp)
+          {
+            echo "Automated update from Omarchy v$OLD to v$NEW, opened by [this run]($RUN_URL)."
+            echo
+            echo "- Package build: **$BUILD**"
+            echo "- Adapter tests: **$TEST**"
+            echo
+            echo "Checks ran in the run above: pull requests opened by GitHub Actions do not trigger other workflows."
+            echo "Before merging, review the notes below and test an install in a VM."
+            echo
+            bash bin/upstream-report.sh "$OLD" "$NEW"
+          } > "$body"
+          draft=()
+          [[ $BUILD == success && $TEST == success ]] || draft=(--draft)
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$BRANCH"
+          git commit -am "Bump Omarchy to v$NEW"
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title "Bump Omarchy to v$NEW" --body-file "$body" "${draft[@]}"
