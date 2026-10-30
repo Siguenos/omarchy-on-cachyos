@@ -177,6 +177,20 @@ carpeta temporal y simula solo la conversión de iconos con ImageMagick. No
 ejecuta pacman ni servicios. Comprueba que no se instalen archivos en rutas de
 arranque, PAM, sudo, SDDM, Snapper, identidad de distribución o repositorios.
 
+## Seguir las versiones de Omarchy
+
+`bin/bump-omarchy.sh [VERSIÓN]` fija otra versión de Omarchy (por defecto el
+último tag estable): actualiza `bin/release.sh`, el PKGBUILD (`pkgver`,
+`_commit`, `sha256sums`) y este README. `bin/upstream-report.sh ANTERIOR NUEVA`
+resume lo que cambió en las partes que el adaptador filtra o reimplementa
+(paquetes base, migraciones, `etc/`, scripts del sistema, aprovisionamiento).
+
+El workflow `Track upstream Omarchy` hace lo mismo cada día: si hay un tag
+estable nuevo, construye el paquete, ejecuta las pruebas y abre una PR con ese
+informe (en borrador si algo falla). Requiere activar *Allow GitHub Actions to
+create and approve pull requests* en Settings → Actions → General. También se
+lanza a mano desde la pestaña Actions, con una versión concreta.
+
 ## Licencia
 
 MIT; consulta [LICENSE](LICENSE). Omarchy y sus recetas originales también usan
