@@ -22,7 +22,8 @@ section() {
   echo
   if [[ -n $output ]]; then
     echo '```'
-    echo "$output"
+    # Keep the pull request body under GitHub's size limit.
+    awk 'NR <= 150; END { if (NR > 150) print "… " NR - 150 " more" }' <<< "$output"
     echo '```'
   else
     echo '_No changes._'
@@ -55,7 +56,7 @@ migrations=$(g diff --name-only --diff-filter=A "$old" "$new" -- migrations)
 if [[ -n $migrations ]]; then
   while read -r file; do
     # Migrations announce themselves with a leading echo.
-    title=$(g show "$new:$file" | sed -n 's/^echo "\(.*\)"$/\1/p' | head -1)
+    title=$(g show "$new:$file" | sed -n 's/^echo "\(.*\)"$/\1/p;T;q')
     echo "- \`$file\` ${title:-(no description)}"
   done <<< "$migrations"
 else
@@ -83,8 +84,11 @@ if [[ -n $top_level ]]; then
   echo '```'
   echo
 fi
-echo '<details><summary>Commits</summary>'
+# Under pipefail, `| head` would kill the pipeline with SIGPIPE on long histories.
+count=$(g rev-list --count "$old..$new")
+echo "<details><summary>Commits ($count)</summary>"
 echo
-g log --format='- %h %s' "$old..$new" | head -200
+g log --max-count=200 --format='- %h %s' "$old..$new"
+(( count <= 200 )) || echo "- … $((count - 200)) more"
 echo
 echo '</details>'
